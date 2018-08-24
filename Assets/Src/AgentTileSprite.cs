@@ -29,24 +29,33 @@ public abstract class AgentTileSprite : TileSprite
     [System.Flags]
     public enum CollisionLayerFlags
     {
-        NONE        = 0,
+        ART         = 0,
         OBSTACLE    = 1,
-        CHARACTER   = 1 << 1,
-        ART         = 1 << 2
+        CHARACTER   = 1 << 1
     };
 
     public float VelocityX          { get; protected set; }
     public float VelocityY          { get; protected set; }
-    public int PixelPositionX       { get; protected set; }
-    public int PixelPositionY       { get; protected set; }
-    public float PixelRemainderX    { get; protected set; }
-    public float PixelRemainderY    { get; protected set; }
+    public int PixelPositionX       { get; set; }
+    public int PixelPositionY       { get; set; }
+    public float PixelRemainderX    { get; set; }
+    public float PixelRemainderY    { get; set; }
 
     public CollisionLayerFlags CollisionLayerFlag;
 
-    protected abstract void ComputeVelocity();
+    public bool IsObstacle()
+    {
+        return ( CollisionLayerFlag & CollisionLayerFlags.OBSTACLE ) == CollisionLayerFlags.OBSTACLE;
+    }
 
-    private void IncrementPositions()
+    public bool IsCharacter()
+    {
+        return ( CollisionLayerFlag & CollisionLayerFlags.CHARACTER ) == CollisionLayerFlags.CHARACTER;
+    }
+
+    public abstract void ComputeVelocity();
+
+    public  void IncrementPositions()
     {
         PixelPositionX = PixelGeometry.MinimumX;
         PixelPositionY = PixelGeometry.MinimumY;
@@ -108,14 +117,8 @@ public abstract class AgentTileSprite : TileSprite
         );
     }
 
-    protected virtual void ResolveCollisions() { }
-
-    protected override void Update()
+    public void UpdatePosition()
     {
-        base.Update();
-        ComputeVelocity();
-        IncrementPositions();
-        ResolveCollisions();
         SetPixelPosition(PixelPositionX, PixelPositionY);
     }
 };

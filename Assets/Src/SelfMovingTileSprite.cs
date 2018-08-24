@@ -28,7 +28,7 @@ public class SelfMovingTileSprite : AgentTileSprite
 {
     public Vector2 Velocity;
 
-    protected override void ComputeVelocity()
+    public override void ComputeVelocity()
     {
         VelocityX = Velocity.x;
         VelocityY = Velocity.y;

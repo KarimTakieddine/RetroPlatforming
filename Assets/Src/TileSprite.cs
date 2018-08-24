@@ -115,7 +115,7 @@ public class TileSprite : MonoBehaviour
         SetComponentsLoaded();
     }
 
-    private void ComputePixelGeometry()
+    public void ComputePixelGeometry()
     {
         if (!AreComponentsLoaded())
         {
@@ -141,8 +141,8 @@ public class TileSprite : MonoBehaviour
         PixelGeometry = new Geometry(
             pixelMinimumX,
             pixelMinimumY,
-            pixelMinimumX + PixelWidth,
-            pixelMinimumY + PixelHeight
+            pixelMinimumX + PixelWidth * Width,
+            pixelMinimumY + PixelHeight * Height
         );
     }
 
@@ -152,10 +152,5 @@ public class TileSprite : MonoBehaviour
         {
             LoadComponentsAndAssets();
         }
-	}
-	
-	protected virtual void Update ()
-    {
-        ComputePixelGeometry();
 	}
 };
