@@ -65,6 +65,15 @@ public class TileSprite : MonoBehaviour
         COMPONENTS_LOADED   = 1
     };
 
+    [System.Flags]
+    public enum CollisionLayerFlags
+    {
+        NONE        = 0,
+        OBSTACLE    = 1,
+        CHARACTER   = 1 << 1,
+        ART         = 1 << 2
+    };
+
     public SpriteRenderer   RendererComponent   { get; private set; }
     public Sprite           SpriteAsset         { get; private set; }
     public Geometry         PixelGeometry       { get; private set; }
@@ -72,6 +81,7 @@ public class TileSprite : MonoBehaviour
     public float            PixelsPerUnit       { get; private set; }
 
     public int Width, Height;
+    public CollisionLayerFlags CollisionLayerFlag;
 
     public bool AreComponentsLoaded()
     {

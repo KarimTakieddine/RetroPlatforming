@@ -81,12 +81,14 @@ public abstract class AgentTileSprite : TileSprite
         );
     }
 
+    protected virtual void ResolveCollisions() { }
+
     protected override void Update()
     {
         base.Update();
         ComputeVelocity();
         IncrementPositions();
-        // TODO: ResolveCollsions();
+        ResolveCollisions();
         SetPixelPosition(PixelPositionX, PixelPositionY);
     }
 };
