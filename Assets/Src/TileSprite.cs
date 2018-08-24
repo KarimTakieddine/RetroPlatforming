@@ -69,6 +69,7 @@ public class TileSprite : MonoBehaviour
     public Sprite           SpriteAsset         { get; private set; }
     public Geometry         PixelGeometry       { get; private set; }
     public StateFlags       CurrentState        { get; private set; }
+    public float            PixelsPerUnit       { get; private set; }
 
     public int Width, Height;
 
@@ -103,6 +104,8 @@ public class TileSprite : MonoBehaviour
             throw new UnityException("Could not load Sprite asset for GameObject: " + name + '!');
         }
 
+        PixelsPerUnit = SpriteAsset.pixelsPerUnit;
+
         SetComponentsLoaded();
     }
 
@@ -122,11 +125,10 @@ public class TileSprite : MonoBehaviour
         {
             Height = 1;
         }
-
-        float pixelsPerUnit = SpriteAsset.pixelsPerUnit;
+        
         Vector3 position    = transform.position;
-        int pixelMinimumX   = (int)( ( position.x - ( 0.5f * Width ) ) * pixelsPerUnit );
-        int pixelMinimumY   = (int)( ( position.y - ( 0.5f * Height ) ) * pixelsPerUnit );
+        int pixelMinimumX   = (int)( ( position.x - ( 0.5f * Width ) ) * PixelsPerUnit );
+        int pixelMinimumY   = (int)( ( position.y - ( 0.5f * Height ) ) * PixelsPerUnit );
 
         transform.localScale = new Vector3(Width, Height, 1.0f);
 
@@ -148,7 +150,7 @@ public class TileSprite : MonoBehaviour
         }
 	}
 	
-	private void Update ()
+	protected virtual void Update ()
     {
         ComputePixelGeometry();
 	}
