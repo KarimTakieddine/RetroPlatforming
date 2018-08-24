@@ -51,7 +51,20 @@ public abstract class AgentTileSprite : TileSprite
         PixelRemainderY += ( pixelIncrementY - iPixelIncrementY );
 
         PixelPositionX += iPixelIncrementX;
+
+        if (PixelRemainderX >= 1.0f)
+        {
+            PixelPositionX++;
+            PixelRemainderX = 0.0f;
+        }
+
         PixelPositionY += iPixelIncrementY;
+
+        if (PixelRemainderY >= 1.0f)
+        {
+            PixelPositionY++;
+            PixelRemainderY = 0.0f;
+        }
     }
 
     public void SetPixelPosition(
