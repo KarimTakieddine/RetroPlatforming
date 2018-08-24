@@ -26,12 +26,23 @@ using UnityEngine;
 
 public abstract class AgentTileSprite : TileSprite
 {
+    [System.Flags]
+    public enum CollisionLayerFlags
+    {
+        NONE        = 0,
+        OBSTACLE    = 1,
+        CHARACTER   = 1 << 1,
+        ART         = 1 << 2
+    };
+
     public float VelocityX          { get; protected set; }
     public float VelocityY          { get; protected set; }
-    public int PixelPositionX       { get; private set; }
-    public int PixelPositionY       { get; private set; }
-    public float PixelRemainderX    { get; private set; }
-    public float PixelRemainderY    { get; private set; }
+    public int PixelPositionX       { get; protected set; }
+    public int PixelPositionY       { get; protected set; }
+    public float PixelRemainderX    { get; protected set; }
+    public float PixelRemainderY    { get; protected set; }
+
+    public CollisionLayerFlags CollisionLayerFlag;
 
     protected abstract void ComputeVelocity();
 
@@ -52,17 +63,33 @@ public abstract class AgentTileSprite : TileSprite
 
         PixelPositionX += iPixelIncrementX;
 
-        if (PixelRemainderX >= 1.0f)
+        if ( Mathf.Abs(PixelRemainderX) >= 1.0f )
         {
-            PixelPositionX++;
+            if (PixelRemainderX > 0)
+            {
+                PixelPositionX++;
+            }
+            else if (PixelRemainderX < 0)
+            {
+                PixelPositionX--;
+            }
+
             PixelRemainderX = 0.0f;
         }
 
         PixelPositionY += iPixelIncrementY;
 
-        if (PixelRemainderY >= 1.0f)
+        if ( Mathf.Abs(PixelRemainderY) >= 1.0f )
         {
-            PixelPositionY++;
+            if (PixelRemainderY > 0)
+            {
+                PixelPositionY++;
+            }
+            else if (PixelRemainderY < 0)
+            {
+                PixelPositionY--;
+            }
+
             PixelRemainderY = 0.0f;
         }
     }

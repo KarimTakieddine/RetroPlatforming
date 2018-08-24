@@ -65,23 +65,15 @@ public class TileSprite : MonoBehaviour
         COMPONENTS_LOADED   = 1
     };
 
-    [System.Flags]
-    public enum CollisionLayerFlags
-    {
-        NONE        = 0,
-        OBSTACLE    = 1,
-        CHARACTER   = 1 << 1,
-        ART         = 1 << 2
-    };
-
     public SpriteRenderer   RendererComponent   { get; private set; }
     public Sprite           SpriteAsset         { get; private set; }
     public Geometry         PixelGeometry       { get; private set; }
     public StateFlags       CurrentState        { get; private set; }
+    public int              PixelWidth          { get; private set; }
+    public int              PixelHeight         { get; private set; }
     public float            PixelsPerUnit       { get; private set; }
 
     public int Width, Height;
-    public CollisionLayerFlags CollisionLayerFlag;
 
     public bool AreComponentsLoaded()
     {
@@ -116,6 +108,10 @@ public class TileSprite : MonoBehaviour
 
         PixelsPerUnit = SpriteAsset.pixelsPerUnit;
 
+        Texture2D texture   = SpriteAsset.texture;
+        PixelWidth          = texture.width;
+        PixelHeight         = texture.height;
+
         SetComponentsLoaded();
     }
 
@@ -141,14 +137,12 @@ public class TileSprite : MonoBehaviour
         int pixelMinimumY   = (int)( ( position.y - ( 0.5f * Height ) ) * PixelsPerUnit );
 
         transform.localScale = new Vector3(Width, Height, 1.0f);
-
-        Texture2D texture = SpriteAsset.texture;
-
+        
         PixelGeometry = new Geometry(
             pixelMinimumX,
             pixelMinimumY,
-            pixelMinimumX + texture.width,
-            pixelMinimumY + texture.height
+            pixelMinimumX + PixelWidth,
+            pixelMinimumY + PixelHeight
         );
     }
 
