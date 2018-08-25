@@ -146,7 +146,7 @@ public class TileSprite : MonoBehaviour
         );
     }
 
-	public void Awake()
+	protected virtual void Awake()
     {
 		if (!AreComponentsLoaded())
         {

@@ -171,22 +171,38 @@ public class AgentTileSpriteManager : MonoBehaviour
                 if (minimumPixelDifference == pixelDifferences[0])
                 {
                     characterTileSprite.PixelPositionX -= minimumPixelDifference;
-                    characterTileSprite.PixelRemainderX = 0.0f;
+
+                    if (characterTileSprite.PixelRemainderX > 0.0f)
+                    {
+                        characterTileSprite.PixelRemainderX = 0.0f;
+                    }
                 }
                 else if (minimumPixelDifference == pixelDifferences[1])
                 {
                     characterTileSprite.PixelPositionX += minimumPixelDifference;
-                    characterTileSprite.PixelRemainderX = 0.0f;
+
+                    if (characterTileSprite.PixelRemainderX < 0.0f)
+                    {
+                        characterTileSprite.PixelRemainderX = 0.0f;
+                    }
                 }
                 else if (minimumPixelDifference == pixelDifferences[2])
                 {
                     characterTileSprite.PixelPositionY -= minimumPixelDifference;
-                    characterTileSprite.PixelRemainderY = 0.0f;
+
+                    if (characterTileSprite.PixelRemainderY > 0.0f)
+                    {
+                        characterTileSprite.PixelRemainderY = 0.0f;
+                    }
                 }
                 else if (minimumPixelDifference == pixelDifferences[3])
                 {
                     characterTileSprite.PixelPositionY += minimumPixelDifference;
-                    characterTileSprite.PixelRemainderY = 0.0f;
+
+                    if (characterTileSprite.PixelRemainderY < 0.0f)
+                    {
+                        characterTileSprite.PixelRemainderY = 0.0f;
+                    }
                 }
             }
 
