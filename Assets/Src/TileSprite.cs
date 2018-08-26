@@ -62,16 +62,16 @@ public class TileSprite : MonoBehaviour
     public enum StateFlags
     {
         NONE                = 0,
-        COMPONENTS_LOADED   = 1
+        COMPONENTS_LOADED   = 1,
+        NORMALIZED_SCALE    = 1 << 1
     };
 
     public SpriteRenderer   RendererComponent   { get; private set; }
     public Sprite           SpriteAsset         { get; private set; }
     public Geometry         PixelGeometry       { get; private set; }
     public StateFlags       CurrentState        { get; private set; }
-    public int              PixelWidth          { get; private set; }
-    public int              PixelHeight         { get; private set; }
-    public float            PixelsPerUnit       { get; private set; }
+    public Vector2          LocalScale          { get; private set; }
+    public int              PixelsPerUnit       { get; private set; }
 
     public int Width, Height;
 
@@ -106,13 +106,54 @@ public class TileSprite : MonoBehaviour
             throw new UnityException("Could not load Sprite asset for GameObject: " + name + '!');
         }
 
-        PixelsPerUnit = SpriteAsset.pixelsPerUnit;
-
-        Texture2D texture   = SpriteAsset.texture;
-        PixelWidth          = texture.width;
-        PixelHeight         = texture.height;
+        PixelsPerUnit = (int)SpriteAsset.pixelsPerUnit;
 
         SetComponentsLoaded();
+    }
+
+    public static int FindClosestMultipleOf(
+        int direction,
+        int number,
+        int factor
+    )
+    {
+        direction /= Mathf.Abs(direction);
+
+        for (int i = number; i < direction * int.MaxValue; i += direction)
+        {
+            if ( ( i % factor ) == 0 )
+            {
+                return i;
+            }
+        }
+
+        return number;
+    }
+
+    public void NormalizeTextureScale()
+    {
+        if (!AreComponentsLoaded())
+        {
+            return;
+        }
+
+        Texture2D texture   = SpriteAsset.texture;
+        int pixelWidth      = texture.width;
+        int pixelHeight     = texture.height;
+
+        int normalizedPixelWidth    = FindClosestMultipleOf( ( pixelWidth < PixelsPerUnit ? -1 : 1 ), pixelWidth, PixelsPerUnit);
+        int normalizedPixelHeight   = FindClosestMultipleOf( ( pixelHeight < PixelsPerUnit ? -1 : 1 ), pixelHeight, PixelsPerUnit);
+
+        LocalScale = new Vector2(
+            (float)normalizedPixelWidth / pixelWidth,
+            (float)normalizedPixelHeight / pixelHeight
+        );
+
+        transform.localScale = new Vector3(
+            LocalScale.x * Width,
+            LocalScale.y * Height,
+            1.0f
+        );
     }
 
     public void ComputePixelGeometry()
@@ -135,14 +176,12 @@ public class TileSprite : MonoBehaviour
         Vector3 position    = transform.position;
         int pixelMinimumX   = (int)( ( position.x - ( 0.5f * Width ) ) * PixelsPerUnit );
         int pixelMinimumY   = (int)( ( position.y - ( 0.5f * Height ) ) * PixelsPerUnit );
-
-        transform.localScale = new Vector3(Width, Height, 1.0f);
         
         PixelGeometry = new Geometry(
             pixelMinimumX,
             pixelMinimumY,
-            pixelMinimumX + PixelWidth * Width,
-            pixelMinimumY + PixelHeight * Height
+            pixelMinimumX + Width * PixelsPerUnit,
+            pixelMinimumY + Height * PixelsPerUnit
         );
     }
 
@@ -151,6 +190,8 @@ public class TileSprite : MonoBehaviour
 		if (!AreComponentsLoaded())
         {
             LoadComponentsAndAssets();
+            NormalizeTextureScale();
+            ComputePixelGeometry();
         }
 	}
 };

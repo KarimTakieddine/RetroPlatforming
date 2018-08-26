@@ -108,8 +108,8 @@ public class AgentTileSpriteManager : MonoBehaviour
             TileSprite.Geometry characterPixelGeometry = new TileSprite.Geometry(
                 characterPixelMinimumX,
                 characterPixelMinimumY,
-                characterPixelMinimumX + ( characterTileSprite.PixelWidth * characterTileSprite.Width ),
-                characterPixelMinimumY + ( characterTileSprite.PixelHeight * characterTileSprite.Height )
+                characterPixelMinimumX + ( characterTileSprite.Width * characterTileSprite.PixelsPerUnit ),
+                characterPixelMinimumY + ( characterTileSprite.Height * characterTileSprite.PixelsPerUnit )
             );
 
             for (int j = 0; j < ObstacleTileSpriteCount; ++j)
