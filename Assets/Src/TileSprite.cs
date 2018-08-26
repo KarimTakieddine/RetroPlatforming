@@ -93,12 +93,12 @@ public class TileSprite : MonoBehaviour
     public void LoadComponentsAndAssets()
     {
         RendererComponent = GetComponent<SpriteRenderer>();
-        SpriteAsset       = RendererComponent.sprite;
+        SpriteAsset = RendererComponent.sprite;
         
         if (!SpriteAsset)
         {
-            SpriteAsset                 = Resources.Load<Sprite>("Sprites/magenta_32_32");
-            RendererComponent.sprite    = SpriteAsset;
+            SpriteAsset = Resources.Load<Sprite>("Sprites/magenta_32_32");
+            RendererComponent.sprite = SpriteAsset;
         }
 
         if (!SpriteAsset)
@@ -137,23 +137,15 @@ public class TileSprite : MonoBehaviour
             return;
         }
 
-        Texture2D texture   = SpriteAsset.texture;
-        int pixelWidth      = texture.width;
-        int pixelHeight     = texture.height;
+        Texture2D texture = SpriteAsset.texture;
+        int pixelWidth = texture.width;
+        int pixelHeight = texture.height;
 
-        int normalizedPixelWidth    = FindClosestMultipleOf( ( pixelWidth < PixelsPerUnit ? -1 : 1 ), pixelWidth, PixelsPerUnit);
-        int normalizedPixelHeight   = FindClosestMultipleOf( ( pixelHeight < PixelsPerUnit ? -1 : 1 ), pixelHeight, PixelsPerUnit);
+        int normalizedPixelWidth = FindClosestMultipleOf( ( pixelWidth < PixelsPerUnit ? -1 : 1 ), pixelWidth, PixelsPerUnit);
+        int normalizedPixelHeight = FindClosestMultipleOf( ( pixelHeight < PixelsPerUnit ? -1 : 1 ), pixelHeight, PixelsPerUnit);
 
-        LocalScale = new Vector2(
-            (float)normalizedPixelWidth / pixelWidth,
-            (float)normalizedPixelHeight / pixelHeight
-        );
-
-        transform.localScale = new Vector3(
-            LocalScale.x * Width,
-            LocalScale.y * Height,
-            1.0f
-        );
+        LocalScale = new Vector2( (float)normalizedPixelWidth / pixelWidth, (float)normalizedPixelHeight / pixelHeight );
+        transform.localScale = new Vector3(LocalScale.x * Width, LocalScale.y * Height, 1.0f);
     }
 
     public void ComputePixelGeometry()
@@ -172,11 +164,11 @@ public class TileSprite : MonoBehaviour
         {
             Height = 1;
         }
-        
-        Vector3 position    = transform.position;
-        int pixelMinimumX   = (int)( ( position.x - ( 0.5f * Width ) ) * PixelsPerUnit );
-        int pixelMinimumY   = (int)( ( position.y - ( 0.5f * Height ) ) * PixelsPerUnit );
-        
+
+        Vector3 position = transform.position;
+        int pixelMinimumX = (int)( ( position.x - ( 0.5f * Width ) ) * PixelsPerUnit );
+        int pixelMinimumY = (int)( ( position.y - ( 0.5f * Height ) ) * PixelsPerUnit );
+
         PixelGeometry = new Geometry(
             pixelMinimumX,
             pixelMinimumY,
@@ -185,7 +177,9 @@ public class TileSprite : MonoBehaviour
         );
     }
 
-	protected virtual void Awake()
+    protected virtual void InitializeState() { }
+
+	private void Awake()
     {
 		if (!AreComponentsLoaded())
         {
@@ -193,5 +187,7 @@ public class TileSprite : MonoBehaviour
             NormalizeTextureScale();
             ComputePixelGeometry();
         }
+
+        InitializeState();
 	}
 };

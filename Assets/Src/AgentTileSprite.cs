@@ -23,16 +23,29 @@
  \* ############################################################################## */
 
 using UnityEngine;
+using System;
 
 public abstract class AgentTileSprite : TileSprite
 {
-    [System.Flags]
+    [Flags]
     public enum CollisionLayerFlags
     {
         ART         = 0,
         OBSTACLE    = 1,
         CHARACTER   = 1 << 1
     };
+
+    [Flags]
+    public enum CollisionStateFlags
+    {
+        NONE        = 0,
+        ENTERED     = 1,
+        EXITED      = 1 << 1,
+        LEFT_WALL   = 1 << 2,
+        RIGHT_WALL  = 1 << 3,
+        CEILING     = 1 << 4,
+        FLOOR       = 1 << 5
+    }
 
     public float VelocityX          { get; protected set; }
     public float VelocityY          { get; protected set; }
@@ -55,7 +68,7 @@ public abstract class AgentTileSprite : TileSprite
 
     public abstract void ComputeVelocity();
 
-    public  void IncrementPositions()
+    public void IncrementPositions()
     {
         PixelPositionX = PixelGeometry.MinimumX;
         PixelPositionY = PixelGeometry.MinimumY;
@@ -120,5 +133,19 @@ public abstract class AgentTileSprite : TileSprite
     public void UpdatePosition()
     {
         SetPixelPosition(PixelPositionX, PixelPositionY);
+    }
+
+    protected virtual void OnCollisionEntered(CollisionStateFlags collisionState, int pixelPenetrationDepth, AgentTileSprite other) { }
+
+    public void SignalCollisionEntered(CollisionStateFlags collisionState, int pixelPenetrationDepth, AgentTileSprite other)
+    {
+        OnCollisionEntered(collisionState, pixelPenetrationDepth, other);
+    }
+
+    protected virtual void OnCollisionExited(AgentTileSprite other) { }
+
+    public void SignalCollisionExited(AgentTileSprite other)
+    {
+        OnCollisionExited(other);
     }
 };

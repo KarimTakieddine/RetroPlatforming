@@ -149,12 +149,15 @@ public class AgentTileSpriteManager : MonoBehaviour
                 int characterPixelMaximumY  = characterPixelGeometry.MaximumY;
 
                 if (
-                    obstacleMinimumX >= characterPixelMaximumX  ||
-                    characterPixelMinimumX >= obstacleMaximumX  ||
-                    obstacleMinimumY >= characterPixelMaximumY ||
-                    characterPixelMinimumY >= obstacleMaximumY
+                    obstacleMinimumX > characterPixelMaximumX   ||
+                    characterPixelMinimumX > obstacleMaximumX   ||
+                    obstacleMinimumY > characterPixelMaximumY   ||
+                    characterPixelMinimumY > obstacleMaximumY
                 )
                 {
+                    characterTileSprite.SignalCollisionExited(obstacleTileSprite);
+                    obstacleTileSprite.SignalCollisionExited(characterTileSprite);
+                    
                     continue;
                 }
 
@@ -166,7 +169,9 @@ public class AgentTileSpriteManager : MonoBehaviour
                     Mathf.Abs(obstacleMaximumY - characterPixelMinimumY)
                 };
 
-                int minimumPixelDifference = pixelDifferences.Min();
+                int minimumPixelDifference                              = pixelDifferences.Min();
+                AgentTileSprite.CollisionStateFlags collisionState      = AgentTileSprite.CollisionStateFlags.NONE;
+                AgentTileSprite.CollisionStateFlags otherCollisionState = AgentTileSprite.CollisionStateFlags.NONE;
 
                 if (minimumPixelDifference == pixelDifferences[0])
                 {
@@ -176,6 +181,9 @@ public class AgentTileSpriteManager : MonoBehaviour
                     {
                         characterTileSprite.PixelRemainderX = 0.0f;
                     }
+
+                    collisionState      = AgentTileSprite.CollisionStateFlags.RIGHT_WALL;
+                    otherCollisionState = AgentTileSprite.CollisionStateFlags.LEFT_WALL;
                 }
                 else if (minimumPixelDifference == pixelDifferences[1])
                 {
@@ -185,6 +193,9 @@ public class AgentTileSpriteManager : MonoBehaviour
                     {
                         characterTileSprite.PixelRemainderX = 0.0f;
                     }
+
+                    collisionState      = AgentTileSprite.CollisionStateFlags.LEFT_WALL;
+                    otherCollisionState = AgentTileSprite.CollisionStateFlags.RIGHT_WALL;
                 }
                 else if (minimumPixelDifference == pixelDifferences[2])
                 {
@@ -194,6 +205,9 @@ public class AgentTileSpriteManager : MonoBehaviour
                     {
                         characterTileSprite.PixelRemainderY = 0.0f;
                     }
+
+                    collisionState      = AgentTileSprite.CollisionStateFlags.CEILING;
+                    otherCollisionState = AgentTileSprite.CollisionStateFlags.FLOOR;
                 }
                 else if (minimumPixelDifference == pixelDifferences[3])
                 {
@@ -203,7 +217,13 @@ public class AgentTileSpriteManager : MonoBehaviour
                     {
                         characterTileSprite.PixelRemainderY = 0.0f;
                     }
+
+                    collisionState      = AgentTileSprite.CollisionStateFlags.FLOOR;
+                    otherCollisionState = AgentTileSprite.CollisionStateFlags.CEILING;
                 }
+
+                characterTileSprite.SignalCollisionEntered(collisionState, minimumPixelDifference, obstacleTileSprite);
+                obstacleTileSprite.SignalCollisionEntered(otherCollisionState, 0, characterTileSprite);
             }
 
             characterTileSprite.UpdatePosition();
