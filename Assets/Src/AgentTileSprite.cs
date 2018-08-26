@@ -39,12 +39,10 @@ public abstract class AgentTileSprite : TileSprite
     public enum CollisionStateFlags
     {
         NONE        = 0,
-        ENTERED     = 1,
-        EXITED      = 1 << 1,
-        LEFT_WALL   = 1 << 2,
-        RIGHT_WALL  = 1 << 3,
-        CEILING     = 1 << 4,
-        FLOOR       = 1 << 5
+        LEFT_WALL   = 1,
+        RIGHT_WALL  = 1 << 1,
+        CEILING     = 1 << 2,
+        FLOOR       = 1 << 3
     }
 
     public float VelocityX          { get; protected set; }

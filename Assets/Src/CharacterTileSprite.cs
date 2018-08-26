@@ -23,10 +23,13 @@
  \* ############################################################################## */
 
 using UnityEngine;
+using System.Collections.Generic;
 
 public class CharacterTileSprite : AgentTileSprite
 {
-    public ControllerStateMachine ControllerState { get; private set; }
+    public Dictionary<int, CollisionStateFlags> CollisionStateMap   { get; private set; }
+    public ControllerStateMachine ControllerState                   { get; private set; }
+    public CollisionStateFlags CurrentCollisionState                { get; private set; }
 
     public ControllerStateMachine.JoystickConfiguration JoystickConfiguration;
     public ControllerStateMachine.KeyboardConfiguration KeyboardConfiguration;
@@ -35,7 +38,8 @@ public class CharacterTileSprite : AgentTileSprite
 
     protected override void InitializeState()
     {
-        ControllerState = new ControllerStateMachine();
+        CollisionStateMap   = new Dictionary<int, CollisionStateFlags>();
+        ControllerState     = new ControllerStateMachine();
     }
 
     public override void ComputeVelocity()
@@ -67,5 +71,37 @@ public class CharacterTileSprite : AgentTileSprite
         {
             VelocityY = 0.0f;
         }
+    }
+
+    protected override void OnCollisionEntered(
+        CollisionStateFlags collisionState,
+        int pixelPenetrationDepth,
+        AgentTileSprite other
+    )
+    {
+        int otherInstanceID = other.GetInstanceID();
+
+        if ( CollisionStateMap.ContainsKey(otherInstanceID) )
+        {
+            return;
+        }
+
+        CollisionStateMap.Add(otherInstanceID, collisionState);
+
+        Debug.Log("ENTERED: " + other.name);
+    }
+
+    protected override void OnCollisionExited(AgentTileSprite other)
+    {
+        int otherInstanceID = other.GetInstanceID();
+
+        if ( !CollisionStateMap.ContainsKey(otherInstanceID) )
+        {
+            return;
+        }
+
+        CollisionStateMap.Remove(otherInstanceID);
+
+        Debug.Log("EXITED: " + other.name);
     }
 };
