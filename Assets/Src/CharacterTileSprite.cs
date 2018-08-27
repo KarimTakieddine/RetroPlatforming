@@ -27,50 +27,71 @@ using System.Collections.Generic;
 
 public class CharacterTileSprite : AgentTileSprite
 {
+    [System.Flags]
+    public enum MovementStateFlags
+    {
+        NONE    = 0,
+        JUMPING = 1
+    };
+    
     public Dictionary<int, CollisionStateFlags> CollisionStateMap   { get; private set; }
     public ControllerStateMachine ControllerState                   { get; private set; }
-    public CollisionStateFlags CurrentCollisionState                { get; private set; }
 
     public ControllerStateMachine.JoystickConfiguration JoystickConfiguration;
     public ControllerStateMachine.KeyboardConfiguration KeyboardConfiguration;
 
-    public float SpeedX, SpeedY;
+    public CollisionStateFlags CurrentCollisionState    { get; private set; }
+    public MovementStateFlags CurrentMovementState      { get; private set; }
+    public float JumpTimer                              { get; private set; }
+
+    public float GroundSpeedX, Gravity, JumpHeight, DurationToJumpPeak;
 
     protected override void InitializeState()
     {
-        CollisionStateMap   = new Dictionary<int, CollisionStateFlags>();
-        ControllerState     = new ControllerStateMachine();
+        CollisionStateMap       = new Dictionary<int, CollisionStateFlags>();
+        ControllerState         = new ControllerStateMachine();
+        CurrentCollisionState   = CollisionStateFlags.NONE;
+        CurrentMovementState    = MovementStateFlags.NONE;
+        JumpTimer               = 0.0f;
     }
 
     public override void ComputeVelocity()
     {
         ControllerState.Monitor(JoystickConfiguration, KeyboardConfiguration);
         
-        if (ControllerState.IsMovingLeft())
+        if ( ( CurrentMovementState & MovementStateFlags.JUMPING ) == MovementStateFlags.JUMPING )
         {
-            VelocityX = -SpeedX;
-        }
-        else if (ControllerState.IsMovingRight())
-        {
-            VelocityX = SpeedX;
+            float initialVelocityY = JumpHeight * 2.0f / DurationToJumpPeak;
+
+            VelocityY = Gravity * JumpTimer + initialVelocityY;
         }
         else
         {
-            VelocityX = 0.0f;
+            if (ControllerState.IsMovingLeft())
+            {
+                VelocityX = -GroundSpeedX;
+            }
+            else if (ControllerState.IsMovingRight())
+            {
+                VelocityX = GroundSpeedX;
+            }
+            else
+            {
+                VelocityX = 0.0f;
+            }
         }
 
-        if (ControllerState.IsMovingUp())
+        if (
+            ((CurrentCollisionState & CollisionStateFlags.FLOOR) == CollisionStateFlags.FLOOR) &&
+            (Input.GetButtonDown(JoystickConfiguration.JumpButtonName) || Input.GetKeyDown(KeyboardConfiguration.JumpKeyCode))
+        )
         {
-            VelocityY = SpeedY;
+            JumpTimer = 0.0f;
+
+            CurrentMovementState |= MovementStateFlags.JUMPING;
         }
-        else if (ControllerState.IsMovingDown())
-        {
-            VelocityY = -SpeedY;
-        }
-        else
-        {
-            VelocityY = 0.0f;
-        }
+
+        JumpTimer += Time.deltaTime;
     }
 
     protected override void OnCollisionEntered(
@@ -86,9 +107,14 @@ public class CharacterTileSprite : AgentTileSprite
             return;
         }
 
-        CollisionStateMap.Add(otherInstanceID, collisionState);
+        CurrentCollisionState |= collisionState;
 
-        Debug.Log("ENTERED: " + other.name);
+        if ( ( collisionState & CollisionStateFlags.FLOOR ) == CollisionStateFlags.FLOOR )
+        {
+            CurrentMovementState &= ~MovementStateFlags.JUMPING;
+        }
+
+        CollisionStateMap.Add(otherInstanceID, collisionState);
     }
 
     protected override void OnCollisionExited(AgentTileSprite other)
@@ -100,8 +126,15 @@ public class CharacterTileSprite : AgentTileSprite
             return;
         }
 
-        CollisionStateMap.Remove(otherInstanceID);
+        CollisionStateFlags collisionState = CollisionStateMap[otherInstanceID];
 
-        Debug.Log("EXITED: " + other.name);
+        if ( ( collisionState & CollisionStateFlags.FLOOR ) == CollisionStateFlags.FLOOR )
+        {
+            VelocityY = Gravity;
+        }
+
+        CurrentCollisionState &= ~collisionState;
+
+        CollisionStateMap.Remove(otherInstanceID);
     }
 };

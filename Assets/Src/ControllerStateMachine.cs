@@ -46,14 +46,14 @@ public class ControllerStateMachine
     [Serializable]
     public struct JoystickConfiguration
     {
-        public string HorizontalAxisName, VerticalAxisName;
+        public string JumpButtonName, HorizontalAxisName, VerticalAxisName;
         public float Deadzone;
     }
 
     [Serializable]
     public struct KeyboardConfiguration
     {
-        public KeyCode LeftKeyCode, RightKeyCode, UpKeyCode, DownKeyCode;
+        public KeyCode JumpKeyCode, LeftKeyCode, RightKeyCode, UpKeyCode, DownKeyCode;
     }
 
     public ControlScheme CurrentControlScheme   { get; private set; }
@@ -103,7 +103,7 @@ public class ControllerStateMachine
             configuration.HorizontalAxisName,
             configuration.VerticalAxisName
         );
-
+        
         if (JoystickInput.magnitude != 0.0f)
         {
             if (IsMonitoringKeyboard())
