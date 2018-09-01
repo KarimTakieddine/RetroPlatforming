@@ -24,7 +24,7 @@
 
 using UnityEngine;
 
-public class ActiveBoundingBox : BoundingBox
+public abstract class ActiveBoundingBox : BoundingBox
 {
     public int PixelPositionX { get; private set; }
     public int PixelPositionY { get; private set; }
@@ -35,10 +35,7 @@ public class ActiveBoundingBox : BoundingBox
     public float VelocityX { get; protected set; }
     public float VelocityY { get; protected set; }
 
-    protected virtual void ComputeVelocity()
-    {
-
-    }
+    protected abstract void ComputeVelocity();
 
     private void IncrementPositions()
     {

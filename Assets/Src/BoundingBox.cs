@@ -48,10 +48,15 @@ public class BoundingBox : MonoBehaviour
         }
     };
 
+    public Geometry PixelGeometry { get; private set; }
+
+    public float HalfWidth  { get; private set; }
+    public float HalfHeight { get; private set; }
+
+    public float InversePixelsPerUnit { get; private set; }
+
     public uint Width, Height;
     public uint PixelsPerUnit;
-
-    public Geometry PixelGeometry { get; private set; }
 
 	private void ValidateInspectorState()
     {
@@ -60,23 +65,29 @@ public class BoundingBox : MonoBehaviour
             Width = 1;
         }
 
+        HalfWidth = Width * 0.5f;
+
         if (Height == 0)
         {
             Height = 1;
         }
 
+        HalfHeight = Height * 0.5f;
+
         if (PixelsPerUnit == 0)
         {
             PixelsPerUnit = 1;
         }
+
+        InversePixelsPerUnit = 1.0f / PixelsPerUnit;
     }
 
     private void ComputeGeometry()
     {
         Vector3 position = transform.position;
 
-        int pixelMinimumX = (int)( ( position.x - ( Width * 0.5f ) ) * PixelsPerUnit );
-        int pixelMinimumY = (int)( ( position.y - ( Height * 0.5f ) ) * PixelsPerUnit );
+        int pixelMinimumX = (int)( ( position.x - HalfWidth ) * PixelsPerUnit );
+        int pixelMinimumY = (int)( ( position.y - HalfWidth ) * PixelsPerUnit );
 
         PixelGeometry = new Geometry(
             pixelMinimumX,
@@ -91,8 +102,8 @@ public class BoundingBox : MonoBehaviour
         Vector3 currentPosition = transform.position;
 
         transform.position = new Vector3(
-            ( (float)PixelGeometry.MinimumX / PixelsPerUnit ) + ( Width * 0.5f ),
-            ( (float)PixelGeometry.MinimumY / PixelsPerUnit ) + ( Height * 0.5f ),
+            ( PixelGeometry.MinimumX * InversePixelsPerUnit ) + HalfWidth,
+            ( PixelGeometry.MinimumY * InversePixelsPerUnit ) + HalfHeight,
             currentPosition.z
         );
     }
@@ -105,10 +116,10 @@ public class BoundingBox : MonoBehaviour
         int pixelMinimumY = PixelGeometry.MinimumY;
         int pixelMaximumY = PixelGeometry.MaximumY;
 
-        Vector3 bottomLeft  = new Vector3(pixelMinimumX, pixelMinimumY) / PixelsPerUnit;
-        Vector3 topLeft     = new Vector3(pixelMinimumX, pixelMaximumY) / PixelsPerUnit;
-        Vector3 topRight    = new Vector3(pixelMaximumX, pixelMaximumY) / PixelsPerUnit;
-        Vector3 bottomRight = new Vector3(pixelMaximumX, pixelMinimumY) / PixelsPerUnit;
+        Vector3 bottomLeft  = new Vector3(pixelMinimumX, pixelMinimumY) * InversePixelsPerUnit;
+        Vector3 topLeft     = new Vector3(pixelMinimumX, pixelMaximumY) * InversePixelsPerUnit;
+        Vector3 topRight    = new Vector3(pixelMaximumX, pixelMaximumY) * InversePixelsPerUnit;
+        Vector3 bottomRight = new Vector3(pixelMaximumX, pixelMinimumY) * InversePixelsPerUnit;
 
         Debug.DrawLine(
             bottomLeft,
