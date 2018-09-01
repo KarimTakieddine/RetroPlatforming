@@ -24,31 +24,18 @@
 
 using UnityEngine;
 
-public class BoundingBoxManager : MonoBehaviour
+public class MovingObstacleBoundingBox : ActiveBoundingBox
 {
-    public static BoundingBoxManager Instance { get; private set; }
-   
-    private void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else if (!Instance != this)
-        {
-            Destroy(this);
-        }
+    public Vector2 Velocity;
 
-        DontDestroyOnLoad(this);
+    protected override void SetBehaviourFlags()
+    {
+        BehaviourFlag = BehaviourFlags.MOVING | BehaviourFlags.OBSTACLE;
     }
 
-    private void Start()
+    protected override void ComputeVelocity()
     {
-
+        VelocityX = Velocity.x;
+        VelocityY = Velocity.y;
     }
-    
-    void Update ()
-    {
-		
-	}
 };

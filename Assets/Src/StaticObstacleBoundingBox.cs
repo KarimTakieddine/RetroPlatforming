@@ -24,31 +24,16 @@
 
 using UnityEngine;
 
-public class BoundingBoxManager : MonoBehaviour
+public class StaticObstacleBoundingBox : ActiveBoundingBox
 {
-    public static BoundingBoxManager Instance { get; private set; }
-   
-    private void Awake()
+    protected override void SetBehaviourFlags()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else if (!Instance != this)
-        {
-            Destroy(this);
-        }
-
-        DontDestroyOnLoad(this);
+        BehaviourFlag = BehaviourFlags.OBSTACLE;
     }
 
-    private void Start()
+    protected override void ComputeVelocity()
     {
-
+        VelocityX = 0.0f;
+        VelocityY = 0.0f;
     }
-    
-    void Update ()
-    {
-		
-	}
 };

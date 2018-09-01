@@ -48,6 +48,15 @@ public class BoundingBox : MonoBehaviour
         }
     };
 
+    [System.Flags]
+    public enum BehaviourFlags
+    {
+        STATIC      = 0,
+        MOVING      = 1,
+        OBSTACLE    = 1 << 1,
+        CONTROLLER  = 1 << 2
+    };
+
     public Geometry PixelGeometry { get; private set; }
 
     public float HalfWidth  { get; private set; }
@@ -57,6 +66,8 @@ public class BoundingBox : MonoBehaviour
 
     public uint Width, Height;
     public uint PixelsPerUnit;
+
+    public BehaviourFlags BehaviourFlag { get; protected set; }
 
 	private void ValidateInspectorState()
     {
@@ -80,6 +91,11 @@ public class BoundingBox : MonoBehaviour
         }
 
         InversePixelsPerUnit = 1.0f / PixelsPerUnit;
+    }
+
+    protected virtual void SetBehaviourFlags()
+    {
+        BehaviourFlag = (byte)BehaviourFlags.STATIC;
     }
 
     private void ComputeGeometry()
@@ -176,5 +192,6 @@ public class BoundingBox : MonoBehaviour
     private void Awake()
     {
         ValidateInspectorState();
+        SetBehaviourFlags();
     }
 };
