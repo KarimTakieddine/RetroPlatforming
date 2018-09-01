@@ -95,7 +95,7 @@ public class BoundingBox : MonoBehaviour
 
     protected virtual void SetBehaviourFlags()
     {
-        BehaviourFlag = (byte)BehaviourFlags.STATIC;
+        BehaviourFlag = BehaviourFlags.STATIC;
     }
 
     private void ComputeGeometry()
