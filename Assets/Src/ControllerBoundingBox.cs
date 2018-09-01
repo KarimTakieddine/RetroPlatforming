@@ -24,18 +24,15 @@
 
 using UnityEngine;
 
-public class MovingObstacleBoundingBox : ActiveBoundingBox
+public class ControllerBoundingBox : ActiveBoundingBox
 {
-    public Vector2 Velocity;
-
     protected override void SetBehaviourFlags()
     {
-        BehaviourFlag = BehaviourFlags.MOVING | BehaviourFlags.OBSTACLE;
+        BehaviourFlag = BehaviourFlags.MOVING | BehaviourFlags.CONTROLLER;
     }
 
     public override void ComputeVelocity()
     {
-        VelocityX = Velocity.x;
-        VelocityY = Velocity.y;
+        // TODO!
     }
 };

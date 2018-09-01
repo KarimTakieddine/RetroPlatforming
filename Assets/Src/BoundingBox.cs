@@ -98,12 +98,12 @@ public class BoundingBox : MonoBehaviour
         BehaviourFlag = BehaviourFlags.STATIC;
     }
 
-    private void ComputeGeometry()
+    public void ComputeGeometry()
     {
         Vector3 position = transform.position;
 
         int pixelMinimumX = (int)( ( position.x - HalfWidth ) * PixelsPerUnit );
-        int pixelMinimumY = (int)( ( position.y - HalfWidth ) * PixelsPerUnit );
+        int pixelMinimumY = (int)( ( position.y - HalfHeight ) * PixelsPerUnit );
 
         PixelGeometry = new Geometry(
             pixelMinimumX,
@@ -189,9 +189,10 @@ public class BoundingBox : MonoBehaviour
         ComputeGeometry();
     }
 
-    private void Awake()
+    public void Awake()
     {
         ValidateInspectorState();
         SetBehaviourFlags();
+        ComputeGeometry();
     }
 };

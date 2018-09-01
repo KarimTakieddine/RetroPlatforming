@@ -31,7 +31,7 @@ public class StaticObstacleBoundingBox : ActiveBoundingBox
         BehaviourFlag = BehaviourFlags.OBSTACLE;
     }
 
-    protected override void ComputeVelocity()
+    public override void ComputeVelocity()
     {
         VelocityX = 0.0f;
         VelocityY = 0.0f;

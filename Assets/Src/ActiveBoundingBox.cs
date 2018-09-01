@@ -29,15 +29,15 @@ public abstract class ActiveBoundingBox : BoundingBox
     public int PixelPositionX { get; private set; }
     public int PixelPositionY { get; private set; }
 
-    public float RoundingRemainderX { get; private set; }
-    public float RoundingRemainderY { get; private set; }
+    public float RoundingRemainderX { get; set; }
+    public float RoundingRemainderY { get; set; }
 
     public float VelocityX { get; protected set; }
     public float VelocityY { get; protected set; }
 
-    protected abstract void ComputeVelocity();
+    public abstract void ComputeVelocity();
 
-    private void IncrementPositions()
+    public void IncrementPositions()
     {
         PixelPositionX = PixelGeometry.MinimumX;
         PixelPositionY = PixelGeometry.MinimumY;
@@ -82,12 +82,4 @@ public abstract class ActiveBoundingBox : BoundingBox
             RoundingRemainderY = 0.0f;
         }
     }
-
-	void Update ()
-    {
-        ComputeVelocity();
-        IncrementPositions();
-        SetPixelPosition(PixelPositionX, PixelPositionY);
-        DrawGeometry();
-	}
 };
