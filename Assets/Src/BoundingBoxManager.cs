@@ -186,7 +186,8 @@ public class BoundingBoxManager : MonoBehaviour
 
             for (int j = 0; j < ObstacleBoundingBoxInstances.Count; ++j)
             {
-                BoundingBox.Geometry obstaclePixelGeometry = ObstacleBoundingBoxInstances[j].PixelGeometry;
+                ActiveBoundingBox obstacleBoundingBoxInstance   = ObstacleBoundingBoxInstances[j];
+                BoundingBox.Geometry obstaclePixelGeometry      = obstacleBoundingBoxInstance.PixelGeometry;
 
                 int obstaclePixelMinimumX = obstaclePixelGeometry.MinimumX;
                 int obstaclePixelMinimumY = obstaclePixelGeometry.MinimumY;
@@ -201,9 +202,13 @@ public class BoundingBoxManager : MonoBehaviour
                     controllerPixelMinimumY > obstaclePixelMaximumY
                 )
                 {
+                    controllerBoundingBoxInstance.OnBoundingBoxExit(obstacleBoundingBoxInstance);
+
+                    obstacleBoundingBoxInstance.OnBoundingBoxExit(controllerBoundingBoxInstance);
+
                     continue;
                 }
-
+                
                 int[] pixelPenetrationList = new int[4]
                 {
                     Mathf.Abs(controllerPixelMaximumX - obstaclePixelMinimumX),
@@ -212,31 +217,41 @@ public class BoundingBoxManager : MonoBehaviour
                     Mathf.Abs(obstaclePixelMaximumY - controllerPixelMinimumY)
                 };
 
-                int minimumPixelPenetration = pixelPenetrationList.Min();
+                int minimumPixelPenetration                                     = pixelPenetrationList.Min();
+                ActiveBoundingBox.CollisionStateFlags controllerCollisionState  = ActiveBoundingBox.CollisionStateFlags.NONE;
+                ActiveBoundingBox.CollisionStateFlags obstacleCollisionState    = ActiveBoundingBox.CollisionStateFlags.NONE;
 
                 if (minimumPixelPenetration == pixelPenetrationList[0])
                 {
+                    controllerCollisionState                        |= ActiveBoundingBox.CollisionStateFlags.RIGHT_WALL;
+                    obstacleCollisionState                          |= ActiveBoundingBox.CollisionStateFlags.LEFT_WALL;
                     controllerPixelMinimumX                         -= minimumPixelPenetration;
                     controllerBoundingBoxInstance.RoundingRemainderX = 0.0f;
                 }
-
-                if (minimumPixelPenetration == pixelPenetrationList[1])
+                else if (minimumPixelPenetration == pixelPenetrationList[1])
                 {
+                    controllerCollisionState                        |= ActiveBoundingBox.CollisionStateFlags.CEILING;
+                    obstacleCollisionState                          |= ActiveBoundingBox.CollisionStateFlags.GROUND;
                     controllerPixelMinimumY                         -= minimumPixelPenetration;
-                    controllerBoundingBoxInstance.RoundingRemainderX = 0.0f;
-                }
-
-                if (minimumPixelPenetration == pixelPenetrationList[2])
-                {
-                    controllerPixelMinimumX                         += minimumPixelPenetration;
                     controllerBoundingBoxInstance.RoundingRemainderY = 0.0f;
                 }
-
-                if (minimumPixelPenetration == pixelPenetrationList[3])
+                else if (minimumPixelPenetration == pixelPenetrationList[2])
                 {
+                    controllerCollisionState                        |= ActiveBoundingBox.CollisionStateFlags.LEFT_WALL;
+                    obstacleCollisionState                          |= ActiveBoundingBox.CollisionStateFlags.RIGHT_WALL;
+                    controllerPixelMinimumX                         += minimumPixelPenetration;
+                    controllerBoundingBoxInstance.RoundingRemainderX = 0.0f;
+                }
+                else if (minimumPixelPenetration == pixelPenetrationList[3])
+                {
+                    controllerCollisionState                        |= ActiveBoundingBox.CollisionStateFlags.GROUND;
+                    obstacleCollisionState                          |= ActiveBoundingBox.CollisionStateFlags.CEILING;
                     controllerPixelMinimumY                         += minimumPixelPenetration;
                     controllerBoundingBoxInstance.RoundingRemainderY = 0.0f;
                 }
+
+                controllerBoundingBoxInstance.OnBoundingBoxEnter(controllerCollisionState, minimumPixelPenetration, obstacleBoundingBoxInstance);
+                obstacleBoundingBoxInstance.OnBoundingBoxEnter(obstacleCollisionState, minimumPixelPenetration, controllerBoundingBoxInstance);
             }
 
             controllerBoundingBoxInstance.SetPixelPosition(controllerPixelMinimumX, controllerPixelMinimumY);

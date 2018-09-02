@@ -23,9 +23,34 @@
  \* ############################################################################## */
 
 using UnityEngine;
+using System.Collections.Generic;
 
 public class ControllerBoundingBox : ActiveBoundingBox
 {
+    private Dictionary<int, CollisionStateFlags> m_collisionStateMap;
+
+    public Dictionary<int, CollisionStateFlags> CollisionStateMap
+    {
+        get
+        {
+            if (m_collisionStateMap == null)
+            {
+                m_collisionStateMap = new Dictionary<int, CollisionStateFlags>();
+            }
+
+            return m_collisionStateMap;
+        }
+    }
+
+    public float HorizontalVelocity;
+    public float JumpVelocity;
+
+    public float VelocityIncrementX { get; private set; }
+    public float VelocityIncrementY { get; private set; }
+    public float JumpTimer          { get; private set; }
+
+    public bool IsJumping { get; private set; }
+
     protected override void SetBehaviourFlags()
     {
         BehaviourFlag = BehaviourFlags.MOVING | BehaviourFlags.CONTROLLER;
@@ -33,6 +58,75 @@ public class ControllerBoundingBox : ActiveBoundingBox
 
     public override void ComputeVelocity()
     {
-        // TODO!
+        if (IsJumping)
+        {
+            VelocityY = -10.0f * JumpTimer + JumpVelocity + VelocityIncrementY;
+        }
+        else
+        {
+            if (Input.GetKey(KeyCode.D))
+            {
+                VelocityX = HorizontalVelocity;
+            }
+            else if (Input.GetKey(KeyCode.A))
+            {
+                VelocityX = -HorizontalVelocity;
+            }
+            else
+            {
+                VelocityX = 0.0f;
+            }
+
+            VelocityX += VelocityIncrementX;
+        }
+
+        if ( Input.GetButtonDown("Jump") && ( ( CollisionState & CollisionStateFlags.GROUND ) == CollisionStateFlags.GROUND ) )
+        {
+            JumpTimer = 0.0f;
+            IsJumping = true;
+        }
+
+        JumpTimer += Time.deltaTime;
+    }
+
+    public override void OnBoundingBoxEnter(CollisionStateFlags collisionState, int pixelPenetration, ActiveBoundingBox other)
+    {
+        if ( CollisionStateMap.ContainsKey(other.GetInstanceID()) )
+        {
+            return;
+        }
+
+        VelocityIncrementX = other.VelocityX;
+        VelocityIncrementY = other.VelocityY;
+
+        if ((collisionState & CollisionStateFlags.GROUND) == CollisionStateFlags.GROUND)
+        {
+            IsJumping = false;
+        }
+
+        CollisionState |= collisionState;
+
+        CollisionStateMap.Add(other.GetInstanceID(), collisionState);
+    }
+
+    public override void OnBoundingBoxExit(ActiveBoundingBox other)
+    {
+        int otherInstanceID = other.GetInstanceID();
+
+        if ( !CollisionStateMap.ContainsKey(otherInstanceID) )
+        {
+            return;
+        }
+
+        CollisionStateFlags collisionState = CollisionStateMap[otherInstanceID];
+
+        if ( (collisionState & CollisionStateFlags.GROUND ) == CollisionStateFlags.GROUND )
+        {
+            VelocityY = -10.0f;
+        }
+
+        CollisionState &= ~collisionState;
+
+        CollisionStateMap.Remove(otherInstanceID);
     }
 };

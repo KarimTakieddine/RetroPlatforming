@@ -26,6 +26,16 @@ using UnityEngine;
 
 public abstract class ActiveBoundingBox : BoundingBox
 {
+    [System.Flags]
+    public enum CollisionStateFlags
+    {
+        NONE        = 0,
+        LEFT_WALL   = 1,
+        RIGHT_WALL  = 1 << 1,
+        GROUND      = 1 << 2,
+        CEILING     = 1 << 3
+    };
+
     public int PixelPositionX { get; private set; }
     public int PixelPositionY { get; private set; }
 
@@ -34,6 +44,8 @@ public abstract class ActiveBoundingBox : BoundingBox
 
     public float VelocityX { get; protected set; }
     public float VelocityY { get; protected set; }
+
+    public CollisionStateFlags CollisionState { get; protected set; }
 
     public abstract void ComputeVelocity();
 
@@ -82,4 +94,8 @@ public abstract class ActiveBoundingBox : BoundingBox
             RoundingRemainderY = 0.0f;
         }
     }
+
+    public virtual void OnBoundingBoxEnter(CollisionStateFlags collisionState, int pixelPenetration, ActiveBoundingBox other) { }
+
+    public virtual void OnBoundingBoxExit(ActiveBoundingBox other) { }
 };
