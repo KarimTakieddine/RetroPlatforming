@@ -60,75 +60,29 @@ public class ControllerBoundingBox : ActiveBoundingBox
 
     public override void ComputeVelocity()
     {
-        if (IsJumping)
+        if (Input.GetKey(KeyCode.D))
         {
-            VelocityY = -10.0f * JumpTimer + JumpVelocity + VelocityIncrementY;
+            VelocityX = HorizontalVelocity;
+        }
+        else if (Input.GetKey(KeyCode.A))
+        {
+            VelocityX = -HorizontalVelocity;
         }
         else
         {
-            if (Input.GetKey(KeyCode.D))
-            {
-                VelocityX = HorizontalVelocity;
-            }
-            else if (Input.GetKey(KeyCode.A))
-            {
-                VelocityX = -HorizontalVelocity;
-            }
-            else
-            {
-                VelocityX = 0.0f;
-            }
-
-            VelocityX += VelocityIncrementX;
+            VelocityX = 0.0f;
         }
 
-        if ( Input.GetButtonDown("Jump") && ( ( CollisionState & CollisionStateFlags.GROUND ) == CollisionStateFlags.GROUND ) )
-        {
-            JumpTimer = 0.0f;
-            IsJumping = true;
-        }
-
-        JumpTimer += Time.deltaTime;
+        VelocityX += VelocityIncrementX;
     }
 
     public override void OnBoundingBoxEnter(CollisionStateFlags collisionState, int pixelPenetration, ActiveBoundingBox other)
     {
-        if ( CollisionStateMap.ContainsKey(other.GetInstanceID()) )
-        {
-            return;
-        }
-
-        VelocityIncrementX = other.VelocityX;
-        VelocityIncrementY = other.VelocityY;
-
-        if ((collisionState & CollisionStateFlags.GROUND) == CollisionStateFlags.GROUND)
-        {
-            IsJumping = false;
-        }
-
-        CollisionState |= collisionState;
-
-        CollisionStateMap.Add(other.GetInstanceID(), collisionState);
+        
     }
 
     public override void OnBoundingBoxExit(ActiveBoundingBox other)
     {
-        int otherInstanceID = other.GetInstanceID();
-
-        if ( !CollisionStateMap.ContainsKey(otherInstanceID) )
-        {
-            return;
-        }
-
-        CollisionStateFlags collisionState = CollisionStateMap[otherInstanceID];
-
-        if ( (collisionState & CollisionStateFlags.GROUND ) == CollisionStateFlags.GROUND )
-        {
-            VelocityY = -10.0f;
-        }
-
-        CollisionState &= ~collisionState;
-
-        CollisionStateMap.Remove(otherInstanceID);
+        
     }
 };
