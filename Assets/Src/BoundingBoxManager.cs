@@ -225,7 +225,6 @@ public class BoundingBoxManager : MonoBehaviour
                 {
                     controllerCollisionState    |= ActiveBoundingBox.CollisionStateFlags.RIGHT_WALL;
                     obstacleCollisionState      |= ActiveBoundingBox.CollisionStateFlags.LEFT_WALL;
-                    controllerPixelMinimumX     -= minimumPixelPenetration;
 
                     if ( ( obstacleBoundingBoxInstance.BehaviourFlag & BoundingBox.BehaviourFlags.SLOPE ) == BoundingBox.BehaviourFlags.SLOPE )
                     {
@@ -233,7 +232,8 @@ public class BoundingBoxManager : MonoBehaviour
                         List<List<bool>> slopeTextureBitmap                 = slopeBoundingBoxInstance.TextureBitmap;
                         int bitmapRowIndex                                  = Mathf.Abs(controllerPixelMinimumY - obstaclePixelMinimumY);
 
-                        List<bool> bitmapRow = slopeTextureBitmap[bitmapRowIndex];
+                        List<bool> bitmapRow            = slopeTextureBitmap[bitmapRowIndex];
+                        int pixelPenetrationAllowance   = 0;
 
                         for (int l = 0; l < bitmapRow.Count; ++l)
                         {
@@ -244,18 +244,30 @@ public class BoundingBoxManager : MonoBehaviour
                                 break;
                             }
 
-                            ++controllerPixelMinimumX;
+                            ++pixelPenetrationAllowance;
                         }
 
-                        if (controllerBoundingBoxInstance.VelocityX > 0.0f)
+                        int pixelPenetrationDifference = minimumPixelPenetration - pixelPenetrationAllowance;
+
+                        if (pixelPenetrationDifference != 0)
                         {
-                            ++controllerPixelMinimumY;
+                            controllerPixelMinimumX -= pixelPenetrationDifference;
+                            
+                            if (controllerBoundingBoxInstance.VelocityX > 0.0f)
+                            {
+                                ++controllerPixelMinimumX;
+                                ++controllerPixelMinimumY;
+                            }
+                            else if (controllerBoundingBoxInstance.VelocityX < 0.0f)
+                            {
+                                --controllerPixelMinimumX;
+                                --controllerPixelMinimumY;
+                            }
                         }
-                        else if (controllerBoundingBoxInstance.VelocityX < 0.0f)
-                        {
-                            --controllerPixelMinimumX;
-                            --controllerPixelMinimumY;
-                        }
+                    }
+                    else
+                    {
+                        controllerPixelMinimumX -= minimumPixelPenetration;
                     }
 
                     controllerBoundingBoxInstance.RoundingRemainderX = 0.0f;
@@ -278,31 +290,42 @@ public class BoundingBoxManager : MonoBehaviour
                 {
                     controllerCollisionState    |= ActiveBoundingBox.CollisionStateFlags.GROUND;
                     obstacleCollisionState      |= ActiveBoundingBox.CollisionStateFlags.CEILING;
-                    controllerPixelMinimumY     += minimumPixelPenetration;
-
+                    
                     if ( ( obstacleBoundingBoxInstance.BehaviourFlag & BoundingBox.BehaviourFlags.SLOPE ) == BoundingBox.BehaviourFlags.SLOPE )
                     {
                         SlopeObstacleBoundingBox slopeBoundingBoxInstance   = (SlopeObstacleBoundingBox)obstacleBoundingBoxInstance;
                         List<List<bool>> slopeTextureBitmap                 = slopeBoundingBoxInstance.TextureBitmap;
-                        int bitmapRowIndex                                  = Mathf.Abs(controllerPixelMinimumY - obstaclePixelMaximumY);
-                        int bitmapColumnIndex                               = Mathf.Abs(obstaclePixelMinimumX - controllerPixelMaximumX);
-                        
-                        if (bitmapColumnIndex < 32)
+                        int bitmapColumnIndex                               = Mathf.Abs(controllerPixelMaximumX - obstaclePixelMinimumX - 1);
+                        int bitmapRowCount                                  = slopeTextureBitmap.Count;
+                        int pixelPenetrationAllowance                       = 0;
+
+                        for (int l = bitmapRowCount - 1; l >= 0; --l)
                         {
-                            for (int k = 32 - bitmapRowIndex - 1; k >= 0; --k)
+                            List<bool> bitmapRow = slopeTextureBitmap[l];
+
+                            if (bitmapColumnIndex > bitmapRow.Count - 1)
                             {
-                                bool bitmapValue = slopeTextureBitmap[k][bitmapColumnIndex];
-
-                                if (bitmapValue)
-                                {
-                                    continue;
-                                }
-
-                                --controllerPixelMinimumY;
+                                break;
                             }
-                            
-                            --controllerPixelMinimumY;
+
+                            if (bitmapRow[bitmapColumnIndex])
+                            {
+                                break;
+                            }
+
+                            ++pixelPenetrationAllowance;
                         }
+
+                        int pixelPenetrationDifference = minimumPixelPenetration - pixelPenetrationAllowance;
+                        
+                        if (pixelPenetrationDifference != 0)
+                        {
+                            controllerPixelMinimumY += pixelPenetrationDifference;
+                        }
+                    }
+                    else
+                    {
+                        controllerPixelMinimumY += minimumPixelPenetration;
                     }
 
                     controllerBoundingBoxInstance.RoundingRemainderY = 0.0f;
