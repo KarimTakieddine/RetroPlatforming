@@ -28,7 +28,7 @@ public class StaticObstacleBoundingBox : ActiveBoundingBox
 {
     protected override void SetBehaviourFlags()
     {
-        BehaviourFlag = BehaviourFlags.OBSTACLE;
+        BehaviourFlag = BehaviourFlags.COLLIDER;
     }
 
     public override void ComputeVelocity()

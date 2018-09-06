@@ -30,7 +30,7 @@ public class MovingObstacleBoundingBox : ActiveBoundingBox
 
     protected override void SetBehaviourFlags()
     {
-        BehaviourFlag = BehaviourFlags.MOVING | BehaviourFlags.OBSTACLE;
+        BehaviourFlag = BehaviourFlags.COLLIDER;
     }
 
     public override void ComputeVelocity()

@@ -141,18 +141,18 @@ public class BoundingBoxManager : MonoBehaviour
             BoundingBox boundingBoxInstance             = BoundingBoxInstances[i];
             BoundingBox.BehaviourFlags behaviourFlags   = boundingBoxInstance.BehaviourFlag;
 
-            if ( ( behaviourFlags & BoundingBox.BehaviourFlags.MOVING ) == 0 )
+            if ( ( behaviourFlags & BoundingBox.BehaviourFlags.COLLIDER ) == 0 )
             {
                 continue;
             }
 
-            if ( ( behaviourFlags & BoundingBox.BehaviourFlags.OBSTACLE ) == BoundingBox.BehaviourFlags.OBSTACLE )
-            {
-                ObstacleBoundingBoxInstances.Add( (ActiveBoundingBox)boundingBoxInstance );
-            }
-            else if ( (behaviourFlags & BoundingBox.BehaviourFlags.CONTROLLER ) == BoundingBox.BehaviourFlags.CONTROLLER )
+            if ( (behaviourFlags & BoundingBox.BehaviourFlags.CONTROLLER ) == BoundingBox.BehaviourFlags.CONTROLLER )
             {
                 ControllerBoundingBoxInstances.Add( (ActiveBoundingBox)boundingBoxInstance );
+            }
+            else
+            {
+                ObstacleBoundingBoxInstances.Add( (ActiveBoundingBox)boundingBoxInstance );
             }
         }
     }

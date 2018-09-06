@@ -51,9 +51,11 @@ public class ControllerBoundingBox : ActiveBoundingBox
 
     public bool IsJumping { get; private set; }
 
+    // TODO: Define overriden InitializeLocalState() logic!
+
     protected override void SetBehaviourFlags()
     {
-        BehaviourFlag = BehaviourFlags.MOVING | BehaviourFlags.CONTROLLER;
+        BehaviourFlag = BehaviourFlags.COLLIDER | BehaviourFlags.CONTROLLER;
     }
 
     public override void ComputeVelocity()

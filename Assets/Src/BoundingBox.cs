@@ -51,10 +51,10 @@ public class BoundingBox : MonoBehaviour
     [System.Flags]
     public enum BehaviourFlags
     {
-        STATIC      = 0,
-        MOVING      = 1,
-        OBSTACLE    = 1 << 1,
-        CONTROLLER  = 1 << 2
+        TRIGGER     = 0,
+        COLLIDER    = 1,
+        CONTROLLER  = 1 << 1,
+        SLOPE       = 1 << 2
     };
 
     public Geometry PixelGeometry { get; private set; }
@@ -93,9 +93,14 @@ public class BoundingBox : MonoBehaviour
         InversePixelsPerUnit = 1.0f / PixelsPerUnit;
     }
 
+    protected virtual void InitializeLocalState()
+    {
+
+    }
+
     protected virtual void SetBehaviourFlags()
     {
-        BehaviourFlag = BehaviourFlags.STATIC;
+        BehaviourFlag = BehaviourFlags.TRIGGER;
     }
 
     public void ComputeGeometry()
@@ -192,6 +197,7 @@ public class BoundingBox : MonoBehaviour
     public void Awake()
     {
         ValidateInspectorState();
+        InitializeLocalState();
         SetBehaviourFlags();
         ComputeGeometry();
     }
