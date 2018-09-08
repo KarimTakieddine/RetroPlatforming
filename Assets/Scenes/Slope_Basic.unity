@@ -324,8 +324,8 @@ MonoBehaviour:
   Width: 1
   Height: 1
   PixelsPerUnit: 32
-  HorizontalVelocity: 2
-  JumpVelocity: 3
+  HorizontalVelocity: 3
+  JumpVelocity: 5
 --- !u!212 &594819359
 SpriteRenderer:
   m_ObjectHideFlags: 0
