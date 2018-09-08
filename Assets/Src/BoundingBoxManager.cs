@@ -28,6 +28,32 @@ using System.Linq;
 
 public class BoundingBoxManager : MonoBehaviour
 {
+    public class CollisionEvent
+    {
+        public ActiveBoundingBox Other                              { get; set; }
+        public ActiveBoundingBox.CollisionStateFlags CollisionState { get; set; } 
+        public int PenetrationDepth                                 { get; set; }
+
+        public CollisionEvent(int penetrationDepth, ActiveBoundingBox.CollisionStateFlags collisionState, ActiveBoundingBox other)
+        {
+            Other               = other;
+            CollisionState      = collisionState;
+            PenetrationDepth    = penetrationDepth;
+        }
+
+        public override bool Equals(System.Object other)
+        {
+            CollisionEvent collisionEvent = other as CollisionEvent;
+
+            return Other.GetInstanceID() == collisionEvent.Other.GetInstanceID();
+        }
+
+        public override int GetHashCode()
+        {
+            return Other.GetInstanceID();
+        }
+    }
+
     public static BoundingBoxManager Instance { get; private set; }
 
     private List<BoundingBox> m_BoundingBoxInstances;
@@ -72,6 +98,21 @@ public class BoundingBoxManager : MonoBehaviour
             }
 
             return m_ControllerBoundingBoxInstances;
+        }
+    }
+
+    private static List<CollisionEvent> m_CollisionEventHistory;
+
+    public static List<CollisionEvent> CollisionEventHistory
+    {
+        get
+        {
+            if (m_CollisionEventHistory == null)
+            {
+                m_CollisionEventHistory = new List<CollisionEvent>();
+            }
+
+            return m_CollisionEventHistory;
         }
     }
 
@@ -202,9 +243,17 @@ public class BoundingBoxManager : MonoBehaviour
                     controllerPixelMinimumY > obstaclePixelMaximumY
                 )
                 {
-                    controllerBoundingBoxInstance.OnBoundingBoxExit(obstacleBoundingBoxInstance);
+                    CollisionEvent exitCollisionEvent = new CollisionEvent(0, ActiveBoundingBox.CollisionStateFlags.NONE, obstacleBoundingBoxInstance);
 
+                    if ( !CollisionEventHistory.Contains(exitCollisionEvent) )
+                    {
+                        continue;
+                    }
+
+                    controllerBoundingBoxInstance.OnBoundingBoxExit(obstacleBoundingBoxInstance);
                     obstacleBoundingBoxInstance.OnBoundingBoxExit(controllerBoundingBoxInstance);
+
+                    CollisionEventHistory.Remove(exitCollisionEvent);
 
                     continue;
                 }
@@ -331,8 +380,15 @@ public class BoundingBoxManager : MonoBehaviour
                     controllerBoundingBoxInstance.RoundingRemainderY = 0.0f;
                 }
 
-                controllerBoundingBoxInstance.OnBoundingBoxEnter(controllerCollisionState, minimumPixelPenetration, obstacleBoundingBoxInstance);
-                obstacleBoundingBoxInstance.OnBoundingBoxEnter(obstacleCollisionState, minimumPixelPenetration, controllerBoundingBoxInstance);
+                CollisionEvent enterCollisionEvent = new CollisionEvent(minimumPixelPenetration, controllerCollisionState, obstacleBoundingBoxInstance);
+
+                if (!CollisionEventHistory.Contains(enterCollisionEvent))
+                {
+                    controllerBoundingBoxInstance.OnBoundingBoxEnter(controllerCollisionState, minimumPixelPenetration, obstacleBoundingBoxInstance);
+                    obstacleBoundingBoxInstance.OnBoundingBoxEnter(obstacleCollisionState, minimumPixelPenetration, controllerBoundingBoxInstance);
+
+                    CollisionEventHistory.Add(enterCollisionEvent);
+                }
             }
 
             controllerBoundingBoxInstance.SetPixelPosition(controllerPixelMinimumX, controllerPixelMinimumY);

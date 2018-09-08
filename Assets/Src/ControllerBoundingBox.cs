@@ -60,25 +60,41 @@ public class ControllerBoundingBox : ActiveBoundingBox
 
     public override void ComputeVelocity()
     {
-        if (Input.GetKey(KeyCode.D))
+        if (Input.GetButtonDown("Jump") && !IsJumping)
         {
-            VelocityX = HorizontalVelocity;
+            JumpTimer = 0.0f;
+            IsJumping = true;
         }
-        else if (Input.GetKey(KeyCode.A))
+
+        if (!IsJumping)
         {
-            VelocityX = -HorizontalVelocity;
+            if (Input.GetKey(KeyCode.D))
+            {
+                VelocityX = HorizontalVelocity;
+            }
+            else if (Input.GetKey(KeyCode.A))
+            {
+                VelocityX = -HorizontalVelocity;
+            }
+            else
+            {
+                VelocityX = 0.0f;
+            }
         }
         else
         {
-            VelocityX = 0.0f;
+            VelocityY = -10.0f * JumpTimer + JumpVelocity;
         }
 
         VelocityX += VelocityIncrementX;
+
+        JumpTimer += Time.deltaTime;
     }
 
     public override void OnBoundingBoxEnter(CollisionStateFlags collisionState, int pixelPenetration, ActiveBoundingBox other)
     {
-        
+        VelocityY = 0.0f;
+        IsJumping = false;
     }
 
     public override void OnBoundingBoxExit(ActiveBoundingBox other)
