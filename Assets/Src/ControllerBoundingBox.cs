@@ -93,12 +93,15 @@ public class ControllerBoundingBox : ActiveBoundingBox
 
     public override void OnBoundingBoxEnter(CollisionStateFlags collisionState, int pixelPenetration, ActiveBoundingBox other)
     {
-        VelocityY = 0.0f;
-        IsJumping = false;
+        if ( ( collisionState & CollisionStateFlags.GROUND ) == CollisionStateFlags.GROUND )
+        {
+            VelocityY = 0.0f;
+            IsJumping = false;
+        }
     }
 
     public override void OnBoundingBoxExit(ActiveBoundingBox other)
     {
-        
+
     }
 };
