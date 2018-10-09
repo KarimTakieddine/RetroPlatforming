@@ -237,8 +237,8 @@ public class BoundingBoxManager : MonoBehaviour
                 int obstaclePixelMaximumY = obstaclePixelGeometry.MaximumY;
 
                 if (
-                    obstaclePixelMinimumX > controllerPixelMaximumX ||
-                    obstaclePixelMinimumY > controllerPixelMaximumY ||
+                    obstaclePixelMinimumX >= controllerPixelMaximumX ||
+                    obstaclePixelMinimumY >= controllerPixelMaximumY ||
                     controllerPixelMinimumX > obstaclePixelMaximumX ||
                     controllerPixelMinimumY > obstaclePixelMaximumY
                 )
@@ -272,149 +272,202 @@ public class BoundingBoxManager : MonoBehaviour
                 ActiveBoundingBox.CollisionStateFlags controllerCollisionState  = ActiveBoundingBox.CollisionStateFlags.NONE;
                 ActiveBoundingBox.CollisionStateFlags obstacleCollisionState    = ActiveBoundingBox.CollisionStateFlags.NONE;
 
-                if ( ( obstacleBoundingBoxInstance.BehaviourFlag & BoundingBox.BehaviourFlags.SLOPE ) == BoundingBox.BehaviourFlags.SLOPE )
+                if (minimumPixelPenetration == pixelPenetrationList[0])
                 {
-                    SlopeObstacleBoundingBox slopeObstacleBoundingBoxInstance = obstacleBoundingBoxInstance as SlopeObstacleBoundingBox;
+                    controllerCollisionState                            |= ActiveBoundingBox.CollisionStateFlags.RIGHT_WALL;
+                    obstacleCollisionState                              |= ActiveBoundingBox.CollisionStateFlags.LEFT_WALL;
 
-                    List<List<bool>> slopeTextureBitmap = slopeObstacleBoundingBoxInstance.TextureBitmap;
-                    int bitmapRowIndex                  = controllerPixelMinimumY - obstaclePixelMinimumY;
-                    int pixelPenetrationX               = controllerPixelMaximumX - obstaclePixelMinimumX;
-                    int pixelPenetrationAllowanceX      = 0;
-
-                    int bitmapColumnIndex               = controllerPixelMaximumX - obstaclePixelMinimumX - 1;
-                    int pixelPenetrationY               = obstaclePixelMaximumY - controllerPixelMinimumY;
-                    int pixelPenetrationAllowanceY      = 0;
-                    
-                    if (    bitmapRowIndex >= 0 &&
-                            bitmapRowIndex < slopeTextureBitmap.Count &&
-                            bitmapColumnIndex >= 0 &&
-                            bitmapColumnIndex < slopeTextureBitmap[bitmapRowIndex].Count
-                    )
+                    if ( ( obstacleBoundingBoxInstance.BehaviourFlag & BoundingBox.BehaviourFlags.SLOPE ) == BoundingBox.BehaviourFlags.SLOPE )
                     {
-                        for (int k = slopeTextureBitmap.Count - 1; k >= 0; --k)
+                        SlopeObstacleBoundingBox slopeObstacleBoundingBoxInstance = obstacleBoundingBoxInstance as SlopeObstacleBoundingBox;
+                        List<List<bool>> slopeTextureBitmap = slopeObstacleBoundingBoxInstance.TextureBitmap;
+
+                        if (controllerBoundingBoxInstance.VelocityY < 0.0f)
                         {
-                            if (slopeTextureBitmap[k][bitmapColumnIndex])
+                            int bitmapColumnIndex = controllerPixelMaximumX - obstaclePixelMinimumX - 1;
+
+                            int pixelPenetrationY = obstaclePixelMaximumY - controllerPixelMinimumY;
+                            int pixelPenetrationAllowanceY = 0;
+
+                            for (int k = slopeTextureBitmap.Count - 1; k > 0; --k)
                             {
-                                break;
+                                List<bool> bitmapRow = slopeTextureBitmap[k];
+
+                                if (
+                                    bitmapColumnIndex < 0 ||
+                                    bitmapColumnIndex >= bitmapRow.Count
+                                )
+                                {
+                                    break;
+                                }
+
+                                if (bitmapRow[bitmapColumnIndex])
+                                {
+                                    break;
+                                }
+
+                                ++pixelPenetrationAllowanceY;
                             }
 
-                            ++pixelPenetrationAllowanceY;
-                        }
-
-                        int pixelPenetrationDifferenceY = pixelPenetrationY - pixelPenetrationAllowanceY;
-
-                        List<bool> bitmapRow = slopeTextureBitmap[bitmapRowIndex];
-
-                        for (int k = 0; k < bitmapRow.Count; ++k)
-                        {
-                            if (bitmapRow[k])
-                            {
-                                break;
-                            }
-
-                            ++pixelPenetrationAllowanceX;
-                        }
-
-                        int pixelPenetrationDifferenceX = pixelPenetrationX - pixelPenetrationAllowanceX;
-
-                        if ( pixelPenetrationDifferenceX > 0 )
-                        {
-                            ActiveBoundingBox.CollisionStateFlags slopeCollisionState = ActiveBoundingBox.CollisionStateFlags.GROUND;
-
-                            CollisionEvent slopeEnterCollisionEvent = new CollisionEvent(
-                                pixelPenetrationDifferenceX,
-                                slopeCollisionState,
-                                obstacleBoundingBoxInstance
-                            );
-
-                            if ( !CollisionEventHistory.Contains(slopeEnterCollisionEvent) )
-                            {
-                                controllerBoundingBoxInstance.OnBoundingBoxEnter(slopeCollisionState, pixelPenetrationDifferenceX, obstacleBoundingBoxInstance);
-                                obstacleBoundingBoxInstance.OnBoundingBoxEnter(ActiveBoundingBox.CollisionStateFlags.CEILING, pixelPenetrationDifferenceX, controllerBoundingBoxInstance);
-
-                                CollisionEventHistory.Add(slopeEnterCollisionEvent);
-                            }
+                            int pixelPenetrationDifferenceY = pixelPenetrationY - pixelPenetrationAllowanceY;
                             
                             if (pixelPenetrationDifferenceY > 0)
                             {
+                                CollisionEvent slopeEnterCollisionEvent = new CollisionEvent(
+                                    pixelPenetrationDifferenceY,
+                                    ActiveBoundingBox.CollisionStateFlags.GROUND,
+                                    obstacleBoundingBoxInstance
+                                );
+
+                                if (!CollisionEventHistory.Contains(slopeEnterCollisionEvent))
+                                {
+                                    controllerBoundingBoxInstance.OnBoundingBoxEnter(ActiveBoundingBox.CollisionStateFlags.GROUND, pixelPenetrationDifferenceY, obstacleBoundingBoxInstance);
+                                    obstacleBoundingBoxInstance.OnBoundingBoxEnter(obstacleCollisionState, pixelPenetrationDifferenceY, controllerBoundingBoxInstance);
+
+                                    CollisionEventHistory.Add(slopeEnterCollisionEvent);
+                                }
+
                                 controllerPixelMinimumY += pixelPenetrationDifferenceY;
                             }
-                        }
-                        else if (pixelPenetrationDifferenceY > 0)
-                        {
-                            ActiveBoundingBox.CollisionStateFlags slopeCollisionState = ActiveBoundingBox.CollisionStateFlags.GROUND;
-
-                            CollisionEvent slopeEnterCollisionEvent = new CollisionEvent(
-                                pixelPenetrationDifferenceY,
-                                slopeCollisionState,
-                                obstacleBoundingBoxInstance
-                            );
-
-                            if (!CollisionEventHistory.Contains(slopeEnterCollisionEvent))
+                            else
                             {
-                                controllerBoundingBoxInstance.OnBoundingBoxEnter(slopeCollisionState, pixelPenetrationDifferenceY, obstacleBoundingBoxInstance);
-                                obstacleBoundingBoxInstance.OnBoundingBoxEnter(ActiveBoundingBox.CollisionStateFlags.CEILING, pixelPenetrationDifferenceX, controllerBoundingBoxInstance);
+                                CollisionEvent slopeExitCollisionEvent = new CollisionEvent(
+                                    0,
+                                    ActiveBoundingBox.CollisionStateFlags.NONE,
+                                    obstacleBoundingBoxInstance
+                                );
 
-                                CollisionEventHistory.Add(slopeEnterCollisionEvent);
-                            }
+                                if (CollisionEventHistory.Contains(slopeExitCollisionEvent))
+                                {
+                                    controllerBoundingBoxInstance.OnBoundingBoxExit(obstacleBoundingBoxInstance);
+                                    obstacleBoundingBoxInstance.OnBoundingBoxExit(controllerBoundingBoxInstance);
 
-                            if (pixelPenetrationDifferenceX > 0)
-                            {
-                                controllerPixelMinimumX -= pixelPenetrationDifferenceY;
-                            }
-                        }
-                        else if (   pixelPenetrationDifferenceX < 0 &&
-                                    controllerBoundingBoxInstance.VelocityX < 0.0f &&
-                                    controllerBoundingBoxInstance.VelocityY == 0.0f
-                        )
-                        {
-                            if (pixelPenetrationDifferenceY != 0)
-                            {
-                                controllerPixelMinimumY -= Mathf.Abs(pixelPenetrationDifferenceY);
+                                    CollisionEventHistory.Remove(slopeExitCollisionEvent);
+                                }
                             }
                         }
                         else
                         {
-                            CollisionEvent slopeExitCollisionEvent = new CollisionEvent(
-                                pixelPenetrationDifferenceX,
-                                ActiveBoundingBox.CollisionStateFlags.NONE,
-                                obstacleBoundingBoxInstance
-                            );
+                            int pixelPenetrationX = controllerPixelMaximumX - obstaclePixelMinimumX;
 
-                            if (CollisionEventHistory.Contains(slopeExitCollisionEvent))
+                            if (controllerBoundingBoxInstance.VelocityX < 0.0f)
                             {
-                                controllerBoundingBoxInstance.OnBoundingBoxExit(obstacleBoundingBoxInstance);
-                                obstacleBoundingBoxInstance.OnBoundingBoxExit(controllerBoundingBoxInstance);
+                                int bitmapColumnIndex = pixelPenetrationX - 1;
 
-                                CollisionEventHistory.Remove(slopeExitCollisionEvent);
+                                int pixelPenetrationY = obstaclePixelMaximumY - controllerPixelMinimumY;
+                                int pixelPenetrationAllowanceY = 0;
+
+                                for (int k = slopeTextureBitmap.Count - 1; k > 0; --k)
+                                {
+                                    List<bool> bitmapRow = slopeTextureBitmap[k];
+
+                                    if (
+                                        bitmapColumnIndex < 0 ||
+                                        bitmapColumnIndex >= bitmapRow.Count
+                                    )
+                                    {
+                                        break;
+                                    }
+
+                                    if (bitmapRow[bitmapColumnIndex])
+                                    {
+                                        break;
+                                    }
+
+                                    ++pixelPenetrationAllowanceY;
+                                }
+
+                                int pixelPenetrationDifferenceY = pixelPenetrationY - pixelPenetrationAllowanceY;
+
+                                if (pixelPenetrationDifferenceY < 0)
+                                {
+                                    controllerPixelMinimumY += pixelPenetrationDifferenceY;
+
+                                    if (bitmapColumnIndex == 0)
+                                    {
+                                        --controllerPixelMinimumY;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                int bitmapRowCount = slopeTextureBitmap.Count;
+                                int bitmapRowIndex = controllerPixelMinimumY - obstaclePixelMinimumY;
+
+                                if (
+                                    bitmapRowIndex >= 0 &&
+                                    bitmapRowIndex < bitmapRowCount
+                                )
+                                {
+                                    List<bool> bitmapRow = slopeTextureBitmap[bitmapRowIndex];
+                                    int pixelPenetrationAllowanceX = 0;
+
+                                    for (int k = 0; k < bitmapRow.Count; ++k)
+                                    {
+                                        if (bitmapRow[k])
+                                        {
+                                            break;
+                                        }
+
+                                        ++pixelPenetrationAllowanceX;
+                                    }
+
+                                    int pixelPenetrationDifferenceX = pixelPenetrationX - pixelPenetrationAllowanceX;
+
+                                    if (pixelPenetrationDifferenceX > 0)
+                                    {
+                                        CollisionEvent slopeEnterCollisionEvent = new CollisionEvent(
+                                            pixelPenetrationDifferenceX,
+                                            ActiveBoundingBox.CollisionStateFlags.GROUND,
+                                            obstacleBoundingBoxInstance
+                                        );
+
+                                        if (!CollisionEventHistory.Contains(slopeEnterCollisionEvent))
+                                        {
+                                            controllerBoundingBoxInstance.OnBoundingBoxEnter(controllerCollisionState, pixelPenetrationDifferenceX, obstacleBoundingBoxInstance);
+                                            obstacleBoundingBoxInstance.OnBoundingBoxEnter(obstacleCollisionState, pixelPenetrationDifferenceX, controllerBoundingBoxInstance);
+
+                                            CollisionEventHistory.Add(slopeEnterCollisionEvent);
+                                        }
+
+                                        controllerPixelMinimumX -= pixelPenetrationDifferenceX;
+                                        controllerBoundingBoxInstance.RoundingRemainderX = 0.0f;
+
+                                        if (
+                                            controllerBoundingBoxInstance.VelocityX > 0 &&
+                                            controllerBoundingBoxInstance.VelocityY == 0.0f
+                                        )
+                                        {
+                                            ++controllerPixelMinimumY;
+                                            ++controllerPixelMinimumX;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        CollisionEvent slopeExitCollisionEvent = new CollisionEvent(
+                                            0,
+                                            ActiveBoundingBox.CollisionStateFlags.NONE,
+                                            obstacleBoundingBoxInstance
+                                        );
+
+                                        if (CollisionEventHistory.Contains(slopeExitCollisionEvent))
+                                        {
+                                            controllerBoundingBoxInstance.OnBoundingBoxExit(obstacleBoundingBoxInstance);
+                                            obstacleBoundingBoxInstance.OnBoundingBoxExit(controllerBoundingBoxInstance);
+
+                                            CollisionEventHistory.Remove(slopeExitCollisionEvent);
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                     else
                     {
-                        // TODO - Find pixel differences with bounding box boundaries
-
-                        CollisionEvent slopeExitCollisionEvent = new CollisionEvent(
-                            0,
-                            ActiveBoundingBox.CollisionStateFlags.NONE,
-                            obstacleBoundingBoxInstance
-                        );
-
-                        if (CollisionEventHistory.Contains(slopeExitCollisionEvent))
-                        {
-                            controllerBoundingBoxInstance.OnBoundingBoxExit(obstacleBoundingBoxInstance);
-                            obstacleBoundingBoxInstance.OnBoundingBoxExit(controllerBoundingBoxInstance);
-
-                            CollisionEventHistory.Remove(slopeExitCollisionEvent);
-                        }
+                        controllerPixelMinimumX -= minimumPixelPenetration;
                     }
-                }
-                else if (minimumPixelPenetration == pixelPenetrationList[0])
-                {
-                    controllerCollisionState                            |= ActiveBoundingBox.CollisionStateFlags.RIGHT_WALL;
-                    obstacleCollisionState                              |= ActiveBoundingBox.CollisionStateFlags.LEFT_WALL;
-                    controllerPixelMinimumX                             -= minimumPixelPenetration;
-                    controllerBoundingBoxInstance.RoundingRemainderX    = 0.0f;
+
+                    controllerBoundingBoxInstance.RoundingRemainderX = 0.0f;
                 }
                 else if (minimumPixelPenetration == pixelPenetrationList[1])
                 {
@@ -434,8 +487,168 @@ public class BoundingBoxManager : MonoBehaviour
                 {
                     controllerCollisionState                            |= ActiveBoundingBox.CollisionStateFlags.GROUND;
                     obstacleCollisionState                              |= ActiveBoundingBox.CollisionStateFlags.CEILING;
-                    controllerPixelMinimumY                             += minimumPixelPenetration;
-                    controllerBoundingBoxInstance.RoundingRemainderY    = 0.0f;
+
+                    if ( ( obstacleBoundingBoxInstance.BehaviourFlag & BoundingBox.BehaviourFlags.SLOPE ) == BoundingBox.BehaviourFlags.SLOPE )
+                    {
+                        SlopeObstacleBoundingBox slopeObstacleBoundingBoxInstance = obstacleBoundingBoxInstance as SlopeObstacleBoundingBox;
+                        List<List<bool>> slopeTextureBitmap = slopeObstacleBoundingBoxInstance.TextureBitmap;
+
+                        if (controllerBoundingBoxInstance.VelocityX > 0.0f)
+                        {
+                            int bitmapRowCount = slopeTextureBitmap.Count;
+                            int bitmapRowIndex = controllerPixelMinimumY - obstaclePixelMinimumY;
+
+                            if (
+                                bitmapRowIndex >= 0 &&
+                                bitmapRowIndex < bitmapRowCount
+                            )
+                            {
+                                int pixelPenetrationX = controllerPixelMaximumX - obstaclePixelMinimumX;
+
+                                List<bool> bitmapRow = slopeTextureBitmap[bitmapRowIndex];
+                                int pixelPenetrationAllowanceX = 0;
+
+                                for (int k = 0; k < bitmapRow.Count; ++k)
+                                {
+                                    if (bitmapRow[k])
+                                    {
+                                        break;
+                                    }
+
+                                    ++pixelPenetrationAllowanceX;
+                                }
+
+                                int pixelPenetrationDifferenceX = pixelPenetrationX - pixelPenetrationAllowanceX;
+
+                                if (pixelPenetrationDifferenceX > 0)
+                                {
+                                    CollisionEvent slopeEnterCollisionEvent = new CollisionEvent(
+                                        pixelPenetrationDifferenceX,
+                                        obstacleCollisionState,
+                                        obstacleBoundingBoxInstance
+                                    );
+
+                                    if (!CollisionEventHistory.Contains(slopeEnterCollisionEvent))
+                                    {
+                                        controllerBoundingBoxInstance.OnBoundingBoxEnter(controllerCollisionState, pixelPenetrationDifferenceX, obstacleBoundingBoxInstance);
+                                        obstacleBoundingBoxInstance.OnBoundingBoxEnter(obstacleCollisionState, pixelPenetrationDifferenceX, controllerBoundingBoxInstance);
+
+                                        CollisionEventHistory.Add(slopeEnterCollisionEvent);
+                                    }
+
+                                    controllerPixelMinimumX -= pixelPenetrationDifferenceX;
+                                    controllerBoundingBoxInstance.RoundingRemainderX = 0.0f;
+
+                                    if (
+                                        controllerBoundingBoxInstance.VelocityX > 0 &&
+                                        controllerBoundingBoxInstance.VelocityY == 0.0f
+                                    )
+                                    {
+                                        ++controllerPixelMinimumY;
+                                        ++controllerPixelMinimumX;
+                                    }
+                                }
+                                else
+                                {
+                                    CollisionEvent slopeExitCollisionEvent = new CollisionEvent(
+                                        0,
+                                        ActiveBoundingBox.CollisionStateFlags.NONE,
+                                        obstacleBoundingBoxInstance
+                                    );
+
+                                    if (CollisionEventHistory.Contains(slopeExitCollisionEvent))
+                                    {
+                                        controllerBoundingBoxInstance.OnBoundingBoxExit(obstacleBoundingBoxInstance);
+                                        obstacleBoundingBoxInstance.OnBoundingBoxExit(controllerBoundingBoxInstance);
+
+                                        CollisionEventHistory.Remove(slopeExitCollisionEvent);
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            int bitmapColumnIndex = controllerPixelMaximumX - obstaclePixelMinimumX - 1;
+
+                            int pixelPenetrationY = obstaclePixelMaximumY - controllerPixelMinimumY;
+                            int pixelPenetrationAllowanceY = 0;
+
+                            for (int k = slopeTextureBitmap.Count - 1; k > 0; --k)
+                            {
+                                List<bool> bitmapRow = slopeTextureBitmap[k];
+
+                                if (
+                                    bitmapColumnIndex < 0 ||
+                                    bitmapColumnIndex >= bitmapRow.Count
+                                )
+                                {
+                                    break;
+                                }
+
+                                if (bitmapRow[bitmapColumnIndex])
+                                {
+                                    break;
+                                }
+
+                                ++pixelPenetrationAllowanceY;
+                            }
+
+                            int pixelPenetrationDifferenceY = pixelPenetrationY - pixelPenetrationAllowanceY;
+
+                            if (
+                                controllerBoundingBoxInstance.VelocityX < 0.0f &&
+                                controllerBoundingBoxInstance.VelocityY == 0.0f
+                            )
+                            {
+                                if (pixelPenetrationDifferenceY < 0)
+                                {
+                                    controllerPixelMinimumY += pixelPenetrationDifferenceY;
+                                }
+                            }
+                            else
+                            {
+                                if (pixelPenetrationDifferenceY > 0)
+                                {
+                                    CollisionEvent slopeEnterCollisionEvent = new CollisionEvent(
+                                        pixelPenetrationDifferenceY,
+                                        obstacleCollisionState,
+                                        obstacleBoundingBoxInstance
+                                    );
+
+                                    if (!CollisionEventHistory.Contains(slopeEnterCollisionEvent))
+                                    {
+                                        controllerBoundingBoxInstance.OnBoundingBoxEnter(controllerCollisionState, pixelPenetrationDifferenceY, obstacleBoundingBoxInstance);
+                                        obstacleBoundingBoxInstance.OnBoundingBoxEnter(obstacleCollisionState, pixelPenetrationDifferenceY, controllerBoundingBoxInstance);
+
+                                        CollisionEventHistory.Add(slopeEnterCollisionEvent);
+                                    }
+
+                                    controllerPixelMinimumY += pixelPenetrationDifferenceY;
+                                }
+                                else
+                                {
+                                    CollisionEvent slopeExitCollisionEvent = new CollisionEvent(
+                                        0,
+                                        ActiveBoundingBox.CollisionStateFlags.NONE,
+                                        obstacleBoundingBoxInstance
+                                    );
+
+                                    if (CollisionEventHistory.Contains(slopeExitCollisionEvent))
+                                    {
+                                        controllerBoundingBoxInstance.OnBoundingBoxExit(obstacleBoundingBoxInstance);
+                                        obstacleBoundingBoxInstance.OnBoundingBoxExit(controllerBoundingBoxInstance);
+
+                                        CollisionEventHistory.Remove(slopeExitCollisionEvent);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        controllerPixelMinimumY += minimumPixelPenetration;
+                        controllerBoundingBoxInstance.RoundingRemainderY = 0.0f;
+                    }
                 }
 
                 CollisionEvent enterCollisionEvent = new CollisionEvent(minimumPixelPenetration, controllerCollisionState, obstacleBoundingBoxInstance);
